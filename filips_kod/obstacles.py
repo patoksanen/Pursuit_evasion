@@ -16,13 +16,6 @@ def isInRect(p,r):
 
 # Define a triangle
 t = ([-5,0],[5,0],[0,5]) # Vertices
-t2 = ([0,5],[-5,0],[5,0])
-def triangleArea2(t): 
-    s1 = np.array(t[1])-np.array(t[0])
-    s2 = np.array(t[2])-np.array(t[0])
-    base = np.linalg.norm(s1)
-    height = np.linalg.norm(s2-(s1*s2/np.linalg.norm(s1)))
-    return base*height/2
 
 def triangleArea(t):
     s1 = np.array(t[1])-np.array(t[0])
@@ -42,6 +35,4 @@ def isInTriangle(p,t):
 
 
 print(isInRect([50,0.5],r))
-print(triangleArea2(t))
-print(triangleArea2(t2))
 print(isInTriangle([0,1],t))
