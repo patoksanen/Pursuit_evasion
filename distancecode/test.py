@@ -5,7 +5,7 @@ import numpy as np
 
 agent = Evader(50,50,1)
 
-obstacles = [Boundary(90,90),Circle((40,40),5)]
+obstacles = [Boundary(90,90),Rectangle((40,40),(30,30))]
 
 dirs = 4
 angle = 2*np.pi/dirs

@@ -30,10 +30,11 @@ class Game:
         self.history.append((self.evader.x, self.evader.y, [(p.x, p.y) for p in self.pursuers], vor_vertices, vor_regions))
     
     def run(self):
-        for _ in range(self.max_steps):
+        for i in range(self.max_steps):
             self.step()
             if self.is_captured():
                 break
+        return i
     
     def is_captured(self):
         for pursuer in self.pursuers:
