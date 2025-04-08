@@ -47,7 +47,7 @@ class Boundary(Obstacle):
     def isInside(self, p):
         """Check if a point is inside the boundary."""
         x, y = p
-        return 0 <= x <= self.width and 0 <= y <= self.height
+        return not (0 <= x <= self.width and 0 <= y <= self.height)
 
     def getPatch(self):
         """Return a rectangular patch for visualization."""

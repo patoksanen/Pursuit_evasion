@@ -10,7 +10,8 @@ class Agent:
 
     def move(self, data, obstacles):
         target = self.target_vector(data)
-        avoidance = self.avoid_collision(obstacles)
+        tarv = target / np.linalg.norm(target)
+        avoidance = self.getRepulsiveForce(tarv,obstacles)
 
         # Define weights for both vectors
         wt = 1
@@ -75,6 +76,47 @@ class Agent:
     # Return avoidance vector
 
         return avoid_x, avoid_y
+    
+    def getDistance(self, v, obstacles, step = 1):
+        v = v/np.linalg.norm(v) # Make sure v is a unit vector
+        p = np.array([self.x,self.y])
+        pc = p
+        d = step
+        blocked = False
+        while not blocked:
+            d += step
+            pc = p+d*v
+            for o in obstacles:
+                blocked += o.isInside(pc) # Check if we have reached an obstacle.
+        return d
+    
+    def getClosestDistance(self,agents):
+        d = float('inf')
+        for a in agents:
+            ad = np.hypot(self.x-a.x, self.y-a.y)
+            ismin = (ad < d)
+            d = ismin*ad + (1-ismin)*d
+        return d
+    
+    def getRepulsiveForce(self,u,obstacles):
+        """Get the repulsive force acting on the agent. u should be a unit vector."""
+        g = lambda x:1/(x+1e-1) # The distance to force function
+        alpha = 1 # Scale factor
+
+        dirs = 8
+        repforce = 0
+
+        angle = 2*np.pi/dirs
+        rotmat = np.array([[np.cos(angle), -np.sin(angle)],
+                        [np.sin(angle), np.cos(angle)]])
+
+        for i in range(dirs):
+            R = np.linalg.matrix_power(rotmat,i)
+            v = R @ u
+            dist = self.getDistance(v,obstacles)
+            repforce += -v*g(dist)
+        
+        return alpha*repforce
 
 class Evader(Agent):
 
