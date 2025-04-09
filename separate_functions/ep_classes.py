@@ -10,12 +10,15 @@ class Agent:
 
     def move(self, data, obstacles):
         target = self.target_vector(data)
-        tarv = target / np.linalg.norm(target)
+        if np.linalg.norm(target) > 0:
+            tarv = target / np.linalg.norm(target)
+        else:
+            tarv = np.array([0,1])
         avoidance = self.getRepulsiveForce(tarv,obstacles)
 
         # Define weights for both vectors
         wt = 1
-        wa = 1
+        wa = 20
         control = wt*target + wa*avoidance
 
         # Enforce max speed
@@ -100,7 +103,7 @@ class Agent:
     
     def getRepulsiveForce(self,u,obstacles):
         """Get the repulsive force acting on the agent. u should be a unit vector."""
-        g = lambda x:1/(x+1e-1) # The distance to force function
+        g = lambda x:1/((x+1e-1)**2) # The distance to force function
         alpha = 1 # Scale factor
 
         dirs = 8
@@ -145,9 +148,10 @@ class Evader(Agent):
         direction = best_move - np.array([self.x, self.y])
         return direction
 
-    def move(self, pursuers, obstacles):
+    def move_old(self, pursuers, obstacles):
         target = self.target_vector(pursuers)
-        avoidance = self.avoid_collision(obstacles)
+        tarv = target / np.linalg.norm(target)
+        avoidance = self.getRepulsiveForce(tarv,obstacles)
 
         # Define weights for both vectors
         wt = 1
@@ -184,9 +188,10 @@ class Pursuer(Agent):
         direction = np.array(targetpoint) - np.array([self.x, self.y])
         return direction
 
-    def move(self, pursuers, obstacles):
+    def move_old(self, pursuers, obstacles):
         target = self.target_vector(pursuers)
-        avoidance = self.avoid_collision(obstacles)
+        tarv = target / np.linalg.norm(target)
+        avoidance = self.getRepulsiveForce(tarv,obstacles)
 
         # Define weights for both vectors
         wt = 1

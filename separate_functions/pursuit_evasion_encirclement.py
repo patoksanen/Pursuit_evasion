@@ -132,9 +132,10 @@ obstacle1 = Circle((30, 30), 10)  # Bottom left
 obstacle2 = Circle((70, 30), 10)  # Bottom right
 obstacle3 = Circle((40, 70), 10)  # Top left
 obstacle4 = Circle((80, 70), 10)  # Top right
+obstaclebound = Boundary(100,100)
 
 # Store obstacles in a list
-obstacles = [obstacle1, obstacle2, obstacle3, obstacle4]
+obstacles = [obstacle1, obstacle2, obstacle3, obstacle4,obstaclebound]
 
 game = Game(evader, pursuers, max_steps=2000, obstacles=obstacles)
 game.run()
