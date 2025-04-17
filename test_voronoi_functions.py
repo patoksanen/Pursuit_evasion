@@ -20,10 +20,10 @@ print("Viktiga punkter:", v.points[:3])
 scipy.spatial.voronoi_plot_2d(v)
 plt.show()
 
-# Area för p1:s voronoi-cell
+# Area för e:s voronoi-cell
 vertices = [ v.vertices[i] for i in v.regions[v.point_region[0]] ]
 print("Vertices: ", vertices)
-print("Area p1: ", voronoi_functions.polyarea(vertices))
+print("Area e: ", voronoi_functions.polyarea(vertices))
 
 # Vilken area har alla voronoi-celler sammanlagt?
 A_sum = 0
