@@ -11,7 +11,7 @@ def mirrory(p, center = 0):
     return np.array([p[0], pynew])  
 
 
-def polycenter(vs): # vs is list of vertices describing a polygon in 2D - Space, returns numpy array corresponding to the polygon centroid
+def polycenter(vs): # vs is list of vertices describing a polygon in 2D - space, returns numpy array corresponding to the polygon centroid
     cx = 0
     cy = 0
     A = 0
