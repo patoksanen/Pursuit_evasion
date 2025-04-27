@@ -12,16 +12,17 @@ from matplotlib.patches import Polygon
 def check_distance(num_simulations = 1, field_size = (100, 100), max_steps = 500):
     data = []
     evader_x, evader_y = 50, 50
-    evader = Evader(evader_x, evader_x, speed = 0.3)
-    pursuers = [Pursuer(5, 5, speed=0.2, target=evader), Pursuer(40, 5, speed=0.2, target=evader), Pursuer(5, 20, speed=0.2, target=evader), Pursuer(5, 95, speed=0.2, target=evader), Pursuer(95, 5, speed=0.2, target=evader)]
+    evader = Evader(evader_x, evader_x, speed = 0.2)
+    pursuers = [Pursuer(5, 5, speed=0.2, target=evader), Pursuer(40, 5, speed=0.2, target=evader), Pursuer(5, 20, speed=0.2, target=evader), Pursuer(5, 95, speed=0.2, target=evader), Pursuer(95, 5, speed=0.2, target=evader), Pursuer(95, 95, speed = 0.3, target=evader)]
     obstacles = generate_obstacles(num_circles=1,num_rectangles=0,field_size=field_size)
     obstacle1 = Circle((30, 30), 10)  # Bottom left
     obstacle2 = Circle((70, 30), 10)  # Bottom right
     obstacle3 = Circle((40, 70), 10)  # Top left
-    obstacle4 = Circle((25, 10), 10)  # Top right
+    obstacle4 = Circle((70, 70), 10)  # Top right
     obstaclebound = Boundary(100,100)
-    #obstacles = [obstacle1, obstacle2, obstacle3, obstacle4, obstaclebound]
-    obstacles = [obstacle4, obstaclebound]
+    obstacles = [obstacle1, obstacle2, obstacle3, obstacle4, obstaclebound]
+    #obstacles = [obstacle4, obstaclebound]
+    #obstacles = [obstaclebound]
     game = Game(evader, pursuers, max_steps=max_steps, obstacles=obstacles)    
     game.run()
     for pursuer in pursuers:

@@ -3,6 +3,8 @@ from scipy.spatial import Voronoi
 from osbtacle_classes import *
 from pursuit_strategies import *
 from shapely.geometry import Polygon, box
+from shapely.geometry import Point
+
 class Agent:
     def __init__(self, x, y, speed):
         self.x = x
@@ -14,12 +16,12 @@ class Agent:
     def move(self, data, obstacles):
         if isinstance(self, Evader):
             wt = 1
-            wa = 10
+            wa = 20
         if isinstance(self, Pursuer):
             distance = np.linalg.norm([self.target.x - self.x, self.target.y - self.y])
             self.history.append(distance)
             wt = 1
-            wa = 20
+            wa = 50
         target = self.target_vector(data)
         if np.linalg.norm(target) > 0:
             tarv = target / np.linalg.norm(target)
@@ -156,7 +158,7 @@ class Evader(Agent):
     def target_vector(self, pursuers):
         self.step_counter += 1
 
-        if self.step_counter % 3 != 1:
+        if self.step_counter % 10 != 1:
         # Return cached target vector on non-update steps
             return self.cached_target
 
@@ -188,7 +190,7 @@ class Evader(Agent):
             return np.array([self.x - closest_pursuer.x, self.y - closest_pursuer.y])
 
 # Determine where to move
-        in_largest = clipped_region.contains(Polygon([evader_point]))
+        in_largest = clipped_region.contains(Point(evader_point))
 
         if in_largest:
             target = np.array(clipped_region.centroid.coords[0])
@@ -213,7 +215,10 @@ class Evader(Agent):
                 max_area = area
                 largest_region = region
                 largest_polygon = polygon
-        print(areas)
+        #print(areas)
+        #print(self.step_counter)
+        #if self.step_counter == 421:
+            #self.plot_voronoi(pursuers)
         if largest_polygon is None:
         # fallback: flee from closest pursuer
             closest_pursuer = min(pursuers, key=lambda p: np.hypot(p.x - self.x, p.y - self.y))
@@ -234,10 +239,12 @@ class Evader(Agent):
             target = largest_polygon[np.argmin(dists)]
 
         direction = target - evader_point
-        self.plot_voronoi(pursuers)
+        #self.plot_voronoi(pursuers)
         alpha = 0.7  # Adjust to control smoothness
         smoothed_target = alpha * direction + (1 - alpha) * self.cached_target
-
+        print(self.step_counter)
+        if self.step_counter == 450:
+            self.plot_voronoi()
         self.cached_target = smoothed_target
         return smoothed_target
 
@@ -304,16 +311,13 @@ class Evader(Agent):
  
 
 class Pursuer(Agent):
-    def __init__(self, x, y, speed, target, strategy=None):
+    def __init__(self, x, y, speed, target):
         super().__init__(x, y, speed)
-        self.target = target  # usually the evader
-        self.strategy = strategy or DirectPursuit()  # default strategy
+        self.target = target
 
-    def set_strategy(self, strategy):
-        self.strategy = strategy
-
-    def target_vector(self, _):
-        return self.strategy.compute_target(self, self.target)
+    def target_vector(self, targetpoint):
+        direction = np.array(targetpoint) - np.array([self.x, self.y])
+        return direction
 
     def move_old(self, pursuers, obstacles):
         target = self.target_vector(pursuers)
@@ -349,6 +353,3 @@ class Pursuer(Agent):
         if 0 <= new_x <= 100 and 0 <= new_y <= 100:  # Adjust if needed
             self.x = new_x
             self.y = new_y
-
-def hej():
-    pass
