@@ -58,7 +58,7 @@ class Game:
                 break
     def is_captured(self):
         for pursuer in self.pursuers:
-            if np.hypot(self.evader.x - pursuer.x, self.evader.y - pursuer.y) < 0.1:
+            if np.hypot(self.evader.x - pursuer.x, self.evader.y - pursuer.y) < 5:
                 return True
         return False
 

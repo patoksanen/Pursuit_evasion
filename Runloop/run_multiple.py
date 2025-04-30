@@ -9,10 +9,11 @@ from pursuit_strategies import *
 from scipy.spatial import Voronoi, voronoi_plot_2d
 from matplotlib.patches import Polygon
 import time
+import json
 
 # Run several games
 
-n_runs = 5 # Amount of games to run
+n_runs = 3 # Amount of games to run
 game_results = [] # List to store duration of all the simulated games
 max_steps = 500 # The maximum amount of steps in each simulated game
 
@@ -24,9 +25,9 @@ print(f"Running {n_runs} simulations...")
 
 for i in range(n_runs):
     # Initialize a new game
-    evader_x, evader_y = 50, 50
-    evader = Evader(evader_x, evader_y, speed = 0.2)
-    pursuers = [Pursuer(5, 5, speed=0.2, target=evader), Pursuer(40, 5, speed=0.2, target=evader), Pursuer(5, 20, speed=0.2, target=evader), Pursuer(5, 95, speed=0.2, target=evader), Pursuer(95, 5, speed=0.2, target=evader), Pursuer(95, 95, speed = 0.3, target=evader)]
+    # evader_x, evader_y = 50, 50
+    # evader = Evader(evader_x, evader_y, speed = 0.2)
+    # pursuers = [Pursuer(5, 5, speed=0.2, target=evader), Pursuer(40, 5, speed=0.2, target=evader), Pursuer(5, 20, speed=0.2, target=evader), Pursuer(5, 95, speed=0.2, target=evader), Pursuer(95, 5, speed=0.2, target=evader), Pursuer(95, 95, speed = 0.3, target=evader)]
     obstacle1 = Circle((30, 30), 10)  # Bottom left
     obstacle2 = Circle((70, 30), 10)  # Bottom right
     obstacle3 = Circle((40, 70), 10)  # Top left
@@ -34,19 +35,38 @@ for i in range(n_runs):
     obstaclebound = Boundary(100,100)
     obstacles = [obstacle1, obstacle2, obstacle3, obstacle4, obstaclebound]
 
-    # Generate random evader and pursuer positions here?
-    # n_pursuers = 6
-    # speed = 0.2
-    # valid_point_found = False
-    # while not valid_point_found:
-        # x_prop = random.random()*100
-        # y_prop = random.random()*100
-        # for o in obstacles:
-            # valid_point_found += o.isInside( (x_prop,y_prop) )
-        # valid_point_found = not valid_point_found
-    # evader = Evader(x_prop, y_prop, speed = speed)
+    ## Generate random evader and pursuer positions
+    n_pursuers = 6 # Amount of pursuers
+    speed = 0.2 # Speed of pursuers and evaders
+    pursuers = [] # Initialize empty list to be used later
 
-    game = Game(evader, pursuers, max_steps=max_steps, obstacles=obstacles)    
+    # Generate evader position
+    valid_point_found = False
+    while not valid_point_found:
+        x_prop = random.random()*100
+        y_prop = random.random()*100
+        collisions = 0
+        for o in obstacles:
+            collisions += o.isInside( (x_prop,y_prop) )
+        if collisions == 0:
+            valid_point_found = True
+    evader = Evader(x_prop, y_prop, speed = speed)
+
+    # Generate pursuer positions
+    for j in range(n_pursuers):
+        valid_point_found = False
+        while not valid_point_found:
+            x_prop = random.random()*100
+            y_prop = random.random()*100
+            collisions = 0
+            for o in obstacles:
+                collisions += o.isInside( (x_prop,y_prop) )
+            if collisions == 0:
+                valid_point_found = True
+        pursuers.append(Pursuer(x_prop, y_prop, speed = speed, target=evader))
+
+
+    game = Game(evader, pursuers, max_steps=max_steps, obstacles=obstacles)
     game.run()
 
     # Evaluate the results of the game
@@ -62,3 +82,12 @@ for i in range(n_runs):
 
 print("Done!")
 print(game_results)
+
+## Save results to file (in json format)
+
+# Package information with timestamp
+filesave = {"Time":time.ctime(),"Results":game_results}
+
+# Write to file (If no file exists it will be created. I don't really know where though, but it should appear somewhere close to this file :) .)
+with open("simulation_results.txt","a") as f:
+    f.write(json.dumps(filesave)+"\n")
