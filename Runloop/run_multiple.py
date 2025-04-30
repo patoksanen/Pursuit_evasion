@@ -16,6 +16,7 @@ import json
 n_runs = 3 # Amount of games to run
 game_results = [] # List to store duration of all the simulated games
 max_steps = 500 # The maximum amount of steps in each simulated game
+notes = "Voronoi-based-algorithms for both pursuer and evader, capture range 5" # Optional notes about the particular simulation which will be saved to the results file
 
 # Set time reference
 start_time = time.time()
@@ -85,8 +86,8 @@ print(game_results)
 
 ## Save results to file (in json format)
 
-# Package information with timestamp
-filesave = {"Time":time.ctime(),"Results":game_results}
+# Package information with timestamp and notes
+filesave = {"Time":time.ctime(),"Results":game_results,"Notes":notes}
 
 # Write to file (If no file exists it will be created. I don't really know where though, but it should appear somewhere close to this file :) .)
 with open("simulation_results.txt","a") as f:
