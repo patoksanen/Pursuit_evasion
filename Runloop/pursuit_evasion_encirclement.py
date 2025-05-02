@@ -31,8 +31,8 @@ class Game:
         for i, pursuer in enumerate(self.pursuers):
             # pursuer.x = targetpoints[i+1][0]
             # pursuer.y = targetpoints[i+1][1] # For debug purposes
-            # pursuer.move(targetpoints[i+1], self.obstacles, self.pursuers)  # Pass obstacles
-            pursuer.move(self.evader, self.obstacles, self.pursuers) # Use this instead when using the naive method
+            pursuer.move(targetpoints[i+1], self.obstacles, self.pursuers)  # Pass obstacles
+            # pursuer.move(self.evader, self.obstacles, self.pursuers) # Use this instead when using the naive method
             self.enforce_boundaries(pursuer)
 
 
@@ -54,7 +54,7 @@ class Game:
                 break
     def is_captured(self):
         for pursuer in self.pursuers:
-            if np.hypot(self.evader.x - pursuer.x, self.evader.y - pursuer.y) < 2:
+            if np.hypot(self.evader.x - pursuer.x, self.evader.y - pursuer.y) < 4:
                 return True
         return False
 

@@ -26,17 +26,17 @@ class Agent:
         self.y += dy
 
     def move(self, data, obstacles, pursuers):
-        pursuerrep = np.array([0,0])
+        # pursuerrep = np.array([0,0])
         if isinstance(self, Evader):
             wt = 1
             wa = 10
-            wd = 1
+            #wd = 1
         if isinstance(self, Pursuer):
             distance = np.linalg.norm([self.target.x - self.x, self.target.y - self.y])
             self.history.append(distance)
             wt = 1
             wa = 10
-            wd = 1
+            #wd = 1
             # for p in pursuers:
             #     if p != self:
             #         distvec = np.array([p.x-self.x,p.y-self.y])
@@ -45,9 +45,9 @@ class Agent:
         # target = self.target_vector(data)
         # target = self.naive_strategy(data) # Use instead for naive strategy, also check that the correct data is provided in the Game-class
         if isinstance(self, Pursuer):
-            target = self.naive_strategy(data)
-        else:
             target = self.target_vector(data)
+        else:
+            target = self.naive_strategy(data)
         
         if np.linalg.norm(target) > 0:
             tarv = target / np.linalg.norm(target)
@@ -58,7 +58,7 @@ class Agent:
       
         # Define weights for both vectors
   
-        control = wt*target + wa*avoidance + wd*pursuerrep
+        control = wt*target + wa*avoidance
 
         # Enforce max speed
         proposedspeed = np.linalg.norm(control)
@@ -277,7 +277,7 @@ class Evader(Agent):
     def naive_strategy(self,pursuers):
         direction = np.array([0,0])
         for p in pursuers:
-            direction = direction - np.array([p.x-self.x,p.y-self.y])
+            direction = direction - (np.array([p.x-self.x,p.y-self.y]) / np.linalg.norm(np.array([p.x-self.x,p.y-self.y])) )
         return direction
 
     def move_old(self, pursuers, obstacles):
