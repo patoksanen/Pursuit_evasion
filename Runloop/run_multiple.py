@@ -13,10 +13,10 @@ import json
 
 # Run several games
 
-n_runs = 3 # Amount of games to run
+n_runs = 100 # Amount of games to run
 game_results = [] # List to store duration of all the simulated games
-max_steps = 500 # The maximum amount of steps in each simulated game
-notes = "Voronoi-based-algorithms for both pursuer and evader, capture range 5" # Optional notes about the particular simulation which will be saved to the results file
+max_steps = 3000 # The maximum amount of steps in each simulated game
+notes = "Evader uses naive strategy, capture range 2, obstacle configuration square formation circles r=5, distance-variant distance measurements, max steps 3000, v=0.5, n_p=6, wt=1, wa=10" # Optional notes about the particular simulation which will be saved to the results file
 
 # Set time reference
 start_time = time.time()
@@ -29,16 +29,16 @@ for i in range(n_runs):
     # evader_x, evader_y = 50, 50
     # evader = Evader(evader_x, evader_y, speed = 0.2)
     # pursuers = [Pursuer(5, 5, speed=0.2, target=evader), Pursuer(40, 5, speed=0.2, target=evader), Pursuer(5, 20, speed=0.2, target=evader), Pursuer(5, 95, speed=0.2, target=evader), Pursuer(95, 5, speed=0.2, target=evader), Pursuer(95, 95, speed = 0.3, target=evader)]
-    obstacle1 = Circle((30, 30), 10)  # Bottom left
-    obstacle2 = Circle((70, 30), 10)  # Bottom right
-    obstacle3 = Circle((40, 70), 10)  # Top left
-    obstacle4 = Circle((70, 70), 10)  # Top right
+    obstacle1 = Circle((30, 30), 5)  # Bottom left
+    obstacle2 = Circle((70, 30), 5)  # Bottom right
+    obstacle3 = Circle((30, 70), 5)  # Top left
+    obstacle4 = Circle((70, 70), 5)  # Top right
     obstaclebound = Boundary(100,100)
     obstacles = [obstacle1, obstacle2, obstacle3, obstacle4, obstaclebound]
 
     ## Generate random evader and pursuer positions
     n_pursuers = 6 # Amount of pursuers
-    speed = 0.2 # Speed of pursuers and evaders
+    speed = 0.5 # Speed of pursuers and evaders
     pursuers = [] # Initialize empty list to be used later
 
     # Generate evader position
@@ -87,7 +87,7 @@ print(game_results)
 ## Save results to file (in json format)
 
 # Package information with timestamp and notes
-filesave = {"Time":time.ctime(),"Results":game_results,"Notes":notes}
+filesave = {"Time":time.ctime(),"Notes":notes,"Results":game_results}
 
 # Write to file (If no file exists it will be created. I don't really know where though, but it should appear somewhere close to this file :) .)
 with open("simulation_results.txt","a") as f:

@@ -23,14 +23,16 @@ class Game:
         agent.y = np.clip(agent.y, 0, self.field_size[1])
 
     def step(self):
-        self.evader.move(self.pursuers, self.obstacles)  # Evader avoids obstacles
+        self.evader.move(self.pursuers, self.obstacles, self.pursuers)  # Evader avoids obstacles
         self.enforce_boundaries(self.evader)
 
         targetpoints = voronoiCentroids([self.evader] + self.pursuers)
 
         for i, pursuer in enumerate(self.pursuers):
-            pursuer.move(targetpoints[i+1], self.obstacles)  # Pass obstacles
-            # pursuer.move(self.evader, self.obstacles) # Use this instead when using the naive method
+            # pursuer.x = targetpoints[i+1][0]
+            # pursuer.y = targetpoints[i+1][1] # For debug purposes
+            # pursuer.move(targetpoints[i+1], self.obstacles, self.pursuers)  # Pass obstacles
+            pursuer.move(self.evader, self.obstacles, self.pursuers) # Use this instead when using the naive method
             self.enforce_boundaries(pursuer)
 
 
@@ -45,12 +47,6 @@ class Game:
 
         self.history.append((self.evader.x, self.evader.y, [(p.x, p.y) for p in self.pursuers], vor_vertices, vor_regions))
 
-        for pursuer in self.pursuers:
-            old_x, old_y = pursuer.x, pursuer.y
-            pursuer.move_towards_point(targetpoints[i+1], self.obstacles)
-            if not is_valid_move(pursuer, self.obstacles):
-                pursuer.x, pursuer.y = old_x, old_y  # Revert movement if inside an obstacle
-
     def run(self):
         for _ in range(self.max_steps):
             self.step()
@@ -58,7 +54,7 @@ class Game:
                 break
     def is_captured(self):
         for pursuer in self.pursuers:
-            if np.hypot(self.evader.x - pursuer.x, self.evader.y - pursuer.y) < 5:
+            if np.hypot(self.evader.x - pursuer.x, self.evader.y - pursuer.y) < 2:
                 return True
         return False
 

@@ -2,13 +2,17 @@ from ep_classes import *
 import voronoi_functions
 import scipy.spatial
 import matplotlib.pyplot as plt
+import ep_functions
 
 # Generera punkter att testa med
-e = Evader(10,10,1)
-p1 = Pursuer(50,50,1,e)
-p2 = Pursuer(60,70,1,e)
+e = Evader(50,50,1)
+p1 = Pursuer(50,5,1,e)
+p2 = Pursuer(6,60,1,e)
+p3 = Pursuer(75,45,1,e)
 
-v = voronoi_functions.getVoronoiCells([e,p1,p2])
+agentlist = [e,p1,p2,p3]
+
+v = voronoi_functions.getVoronoiCells(agentlist)
 print("Punkter: ",v.points)
 print("Antal punkter: ",len(v.points))
 # Märk att vi har tre punkter men får 15 punkter tillbaka (3 + 3*4 = 15). Det är för att vi speglar punkterna i gränslinjerna.
@@ -16,8 +20,14 @@ print("Antal punkter: ",len(v.points))
 print("Viktiga punkter:", v.points[:3])
 # Motsvarar e, p1, p2
 
+# Get Voronoi centroids
+centroidlist = ep_functions.voronoiCentroids(agentlist)
+print(centroidlist)
+
 # Plot
 scipy.spatial.voronoi_plot_2d(v)
+for centroid in centroidlist:
+    plt.plot(centroid[0],centroid[1],"rx")
 plt.show()
 
 # Area för e:s voronoi-cell

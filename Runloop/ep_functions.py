@@ -85,11 +85,14 @@ def voronoiCentroids(agents,buffer = 1): # Takes a list of Agent-class objects a
         dymax = (dy>dymax)*dy + (dy<=dymax)*dymax
         dall = max(dymax,dxmax)
 
-    #boundsx = [centerx-dxmax-buffer,centerx+dxmax+buffer]
-    #boundsy = [centery-dymax-buffer,centery+dymax+buffer]
+    # boundsx = [centerx-dxmax-buffer,centerx+dxmax+buffer]
+    # boundsy = [centery-dymax-buffer,centery+dymax+buffer]
 
-    boundsx = [centerx-dall-buffer,centerx+dall+buffer]
-    boundsy = [centery-dall-buffer,centery+dall+buffer]
+    # boundsx = [centerx-dall-buffer,centerx+dall+buffer]
+    # boundsy = [centery-dall-buffer,centery+dall+buffer]
+
+    boundsx = [max(0,centerx-dall-buffer),min(centerx+dall+buffer,100)]
+    boundsy = [max(0,centery-dall-buffer),min(centery+dall+buffer,100)]
 
     # Generate mirrored points
     for b in boundsx:

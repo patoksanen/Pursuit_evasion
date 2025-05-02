@@ -4,6 +4,8 @@ from osbtacle_classes import *
 from pursuit_strategies import *
 from shapely.geometry import Polygon, box
 from shapely.geometry import Point
+import voronoi_functions
+import ep_functions
 
 class Agent:
     def __init__(self, x, y, speed):
@@ -13,17 +15,40 @@ class Agent:
         self.history = []
         
 
-    def move(self, data, obstacles):
+    def move_test(self, data, obstacles):
+        control = self.target_vector(data)
+
+        control = control/np.linalg.norm(control)
+        
+        dx = control[0]
+        dy = control[1]
+        self.x += dx
+        self.y += dy
+
+    def move(self, data, obstacles, pursuers):
+        pursuerrep = np.array([0,0])
         if isinstance(self, Evader):
             wt = 1
-            wa = 20
+            wa = 10
+            wd = 1
         if isinstance(self, Pursuer):
             distance = np.linalg.norm([self.target.x - self.x, self.target.y - self.y])
             self.history.append(distance)
             wt = 1
-            wa = 50
-        target = self.target_vector(data)
+            wa = 10
+            wd = 1
+            # for p in pursuers:
+            #     if p != self:
+            #         distvec = np.array([p.x-self.x,p.y-self.y])
+            #         if np.linalg.norm(distvec) < 5:
+            #             pursuerrep = pursuerrep - distvec
+        # target = self.target_vector(data)
         # target = self.naive_strategy(data) # Use instead for naive strategy, also check that the correct data is provided in the Game-class
+        if isinstance(self, Pursuer):
+            target = self.naive_strategy(data)
+        else:
+            target = self.target_vector(data)
+        
         if np.linalg.norm(target) > 0:
             tarv = target / np.linalg.norm(target)
         else:
@@ -33,7 +58,7 @@ class Agent:
       
         # Define weights for both vectors
   
-        control = wt*target + wa*avoidance
+        control = wt*target + wa*avoidance + wd*pursuerrep
 
         # Enforce max speed
         proposedspeed = np.linalg.norm(control)
@@ -104,20 +129,23 @@ class Agent:
 
         return avoid_x, avoid_y
     
-    def getDistance(self, v, obstacles, step = 1):
+    def getDistance(self, v, obstacles, step = 0.25):
         v = v/np.linalg.norm(v) # Make sure v is a unit vector
         p = np.array([self.x,self.y])
         pc = p
         d = step
+        step_number = 0
         blocked = False
         while not blocked:
         
-            d += step
+            d += step*(2**step_number)
+            # d += step
             pc = p+d*v
             if len(obstacles) == 0:
                 break
             for o in obstacles:
                 blocked += o.isInside(pc) # Check if we have reached an obstacle.
+            step_number += 1
         return d
     
     def getClosestDistance(self,agents):
@@ -155,105 +183,101 @@ class Evader(Agent):
         super().__init__(x, y, speed)
         self.step_counter = 0
         self.cached_target = np.array([0.0, 1.0])  # Default forward
+        self.storedcell = 0
 
     def target_vector(self, pursuers):
-        self.step_counter += 1
+        # Get all Voronoi cells
+        vor = voronoi_functions.getVoronoiCells([self] + pursuers)
 
-        if self.step_counter % 10 != 1:
-        # Return cached target vector on non-update steps
-            return self.cached_target
+        # Extract vertices of interesting voronoi cells
+        cellvertices = []
+        for i in range(len(pursuers)+1):
+            cellvertices.append([ vor.vertices[j] for j in vor.regions[vor.point_region[i]] ])
+        
+        # Get areas of all Voronoi cells
+        vorareas = []
+        for cell in cellvertices:
+            vorareas.append(voronoi_functions.polyarea(cell))
 
+        # Check if evader is in large enough cell
+        # if vorareas[0] > 500: # Evader cell has index 0 in the list because we passsed the evader position first when creating the cells
+        if vorareas[0] == max(vorareas):
+            self.storedcell = 0
+            print("Evader free!",vorareas[0])
+            # return self.naive_strategy(pursuers)
+            return ep_functions.polycenter(cellvertices[0]) - np.array([self.x,self.y])
+        
+        ## If not in largest cell
+        # Find largest cell
 
+        if self.storedcell == 0:
+            maxarea = max(vorareas[0:])
+            largeindex = vorareas.index(maxarea)
+            print("Largest cell: ",largeindex)
+            self.storedcell = largeindex
 
-
-        if len(pursuers) <= 3:
-            if pursuers:
-                closest_pursuer = min(pursuers, key=lambda p: np.hypot(p.x - self.x, p.y - self.y))
-                direction = np.array([self.x - closest_pursuer.x, self.y - closest_pursuer.y])
-                return direction
-            else:
-                return np.array([0.0, 0.0])  # No pursuers case
+        # Find closest vertex of largest cell
+        min_dist = 1e4 # Placeholder
+        closestvertex = np.array([0,0]) # Placeholder
+        for vertex in cellvertices[self.storedcell]:
+            dist = np.linalg.norm(vertex-np.array([self.x,self.y]))
+            if dist < min_dist:
+                min_dist = dist
+                closestvertex = vertex
+        
+        return closestvertex - np.array([self.x,self.y])
     
-    # Generate Voronoi diagram
-        points = np.array([[p.x, p.y] for p in pursuers] + [[self.x, self.y]])
-        vor = Voronoi(points)
-        evader_point = np.array([self.x, self.y])
-    
-        # Get evader's region
-        from matplotlib.path import Path
+    def target_vector2(self, pursuers):
+        # Get all Voronoi cells
+        vor = voronoi_functions.getVoronoiCells([self] + pursuers)
 
-        clipped_region = self.get_clipped_voronoi_region(pursuers)
-        evader_point = np.array([self.x, self.y])
+        # Extract vertices of interesting voronoi cells
+        cellvertices = []
+        for i in range(len(pursuers)+1):
+            cellvertices.append([ vor.vertices[j] for j in vor.regions[vor.point_region[i]] ])
+        
+        # Get areas of all Voronoi cells
+        vorareas = []
+        for cell in cellvertices:
+            vorareas.append(voronoi_functions.polyarea(cell))
 
-        if clipped_region is None:
-    # fallback: flee from closest pursuer
-            closest_pursuer = min(pursuers, key=lambda p: np.hypot(p.x - self.x, p.y - self.y))
-            return np.array([self.x - closest_pursuer.x, self.y - closest_pursuer.y])
+        # Check if evader is in large enough cell
+        # if vorareas[0] > 500: # Evader cell has index 0 in the list because we passsed the evader position first when creating the cells
+        if self.storedcell != 0:
+            if np.linalg.norm(self.storedcell - np.array([self.x,self.y])) < 2:
+                self.storedcell = 0
+        
+        if vorareas[0] == max(vorareas) and self.storedcell == 0:
+            print("Evader free!",vorareas[0])
+            # return self.naive_strategy(pursuers)
+            return ep_functions.polycenter(cellvertices[0]) - np.array([self.x,self.y])
+        
+        ## If not in largest cell
+        # Find largest cell
 
-# Determine where to move
-        in_largest = clipped_region.contains(Point(evader_point))
+        if self.storedcell == 0:
+            maxarea = max(vorareas[0:])
+            largeindex = vorareas.index(maxarea)
+            print("Largest cell: ",largeindex)
+            self.storedcell = largeindex
 
-        if in_largest:
-            target = np.array(clipped_region.centroid.coords[0])
-        else:
-    # Find closest point on boundary
-            distances = [np.linalg.norm(np.array(pt) - evader_point) for pt in clipped_region.exterior.coords]
-            closest_idx = np.argmin(distances)
-            target = np.array(clipped_region.exterior.coords[closest_idx])
+            # Find closest vertex of largest cell
+            min_dist = 1e4 # Placeholder
+            closestvertex = np.array([0,0]) # Placeholder
+            for vertex in cellvertices[self.storedcell]:
+                dist = np.linalg.norm(vertex-np.array([self.x,self.y]))
+                if dist < min_dist:
+                    min_dist = dist
+                    self.storedcell = vertex # Store the target point
+        targetp = self.storedcell
+        
+        return targetp - np.array([self.x,self.y])
 
-        max_area = 0
-        largest_region = None
-        largest_polygon = None
-        areas = 0
-        for region in vor.regions:
-            if not region or -1 in region:
-                continue
-            polygon = np.array([vor.vertices[i] for i in region])
-            area = 0.5 * np.abs(np.dot(polygon[:, 0], np.roll(polygon[:, 1], 1)) -
-                            np.dot(polygon[:, 1], np.roll(polygon[:, 0], 1)))
-            areas += area
-            if area > max_area:
-                max_area = area
-                largest_region = region
-                largest_polygon = polygon
-        #print(areas)
-        #print(self.step_counter)
-        #if self.step_counter == 421:
-            #self.plot_voronoi(pursuers)
-        if largest_polygon is None:
-        # fallback: flee from closest pursuer
-            closest_pursuer = min(pursuers, key=lambda p: np.hypot(p.x - self.x, p.y - self.y))
-            return np.array([self.x - closest_pursuer.x, self.y - closest_pursuer.y])
-    # Check if evader is inside the largest-area Voronoi cell
-        from matplotlib.path import Path
-        in_largest = False
-        if largest_polygon is not None:
-            path = Path(largest_polygon)
-            in_largest = path.contains_point(evader_point)
-
-        if in_largest:
-        # Move towards the centroid of the largest region
-            target = np.mean(largest_polygon, axis=0)
-        else:
-        # Move towards the closest vertex of the largest region
-            dists = np.linalg.norm(largest_polygon - evader_point, axis=1)
-            target = largest_polygon[np.argmin(dists)]
-
-        direction = target - evader_point
-        #self.plot_voronoi(pursuers)
-        alpha = 0.7  # Adjust to control smoothness
-        smoothed_target = alpha * direction + (1 - alpha) * self.cached_target
-        # print(self.step_counter)
-        if self.step_counter == 450:
-            self.plot_voronoi()
-        self.cached_target = smoothed_target
-        return smoothed_target
-    
     # Get as far away from pursuers as possible - maximize distance
     def naive_strategy(self,pursuers):
         direction = np.array([0,0])
         for p in pursuers:
-            direction = direction + np.array([p.x-self.x,p.y-self.y])
+            direction = direction - np.array([p.x-self.x,p.y-self.y])
         return direction
 
     def move_old(self, pursuers, obstacles):
@@ -307,6 +331,7 @@ class Evader(Agent):
         region = vor.regions[evader_region_index]
 
         if -1 in region or len(region) == 0:
+            print("Unbounded region!")
             return None  # Infinite or empty region
 
         polygon = Polygon([vor.vertices[i] for i in region])

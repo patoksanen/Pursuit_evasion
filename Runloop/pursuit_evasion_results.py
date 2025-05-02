@@ -9,16 +9,26 @@ from pursuit_strategies import *
 from scipy.spatial import Voronoi, voronoi_plot_2d
 from matplotlib.patches import Polygon
 
-def check_distance(num_simulations = 1, field_size = (100, 100), max_steps = 500):
+def check_distance(num_simulations = 1, field_size = (100, 100), max_steps = 1000):
     data = []
     evader_x, evader_y = 50, 50
-    evader = Evader(evader_x, evader_x, speed = 0.2)
-    pursuers = [Pursuer(5, 5, speed=0.2, target=evader), Pursuer(40, 5, speed=0.2, target=evader), Pursuer(5, 20, speed=0.2, target=evader), Pursuer(5, 95, speed=0.2, target=evader), Pursuer(95, 5, speed=0.2, target=evader), Pursuer(95, 95, speed = 0.3, target=evader)]
+    evader = Evader(evader_x, evader_x, speed = 0.5)
+    pursuerpos = [
+        (10,5),
+        (40,5),
+        (60,5),
+        (90,5),
+        (90,90)
+    ]
+    pursuers = []
+    for pos in pursuerpos:
+        pursuers.append(Pursuer(pos[0], pos[1], speed=0.5, target=evader))
+    # pursuers = [Pursuer(5, 5, speed=0.5, target=evader), Pursuer(10, 5, speed=0.5, target=evader), Pursuer(15, 7, speed=0.5, target=evader), Pursuer(20, 9, speed=0.5, target=evader), Pursuer(25, 4, speed=0.5, target=evader), Pursuer(30, 1, speed = 0.5, target=evader)]
     obstacles = generate_obstacles(num_circles=1,num_rectangles=0,field_size=field_size)
-    obstacle1 = Circle((30, 30), 10)  # Bottom left
-    obstacle2 = Circle((70, 30), 10)  # Bottom right
-    obstacle3 = Circle((40, 70), 10)  # Top left
-    obstacle4 = Circle((70, 70), 10)  # Top right
+    obstacle1 = Circle((30, 30), 5)  # Bottom left
+    obstacle2 = Circle((70, 30), 5)  # Bottom right
+    obstacle3 = Circle((30, 70), 5)  # Top left
+    obstacle4 = Circle((70, 70), 5)  # Top right
     obstaclebound = Boundary(100,100)
     obstacles = [obstacle1, obstacle2, obstacle3, obstacle4, obstaclebound]
     #obstacles = [obstacle4, obstaclebound]
